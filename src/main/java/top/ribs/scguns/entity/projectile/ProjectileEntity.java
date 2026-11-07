@@ -192,6 +192,9 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
     public void setArmorBypassAmount(float amount) {
         this.armorBypassAmount = amount;
     }
+    public float getArmorBypassAmount() {
+        return this.armorBypassAmount;
+    }
     protected float calculateArmorBypassDamage(LivingEntity target, float damage) {
         int armorValue = target.getArmorValue();
 

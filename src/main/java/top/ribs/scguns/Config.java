@@ -255,6 +255,7 @@ public class Config
         public final ForgeConfigSpec.BooleanValue forceEnergyGuns;
         public final ForgeConfigSpec.BooleanValue toggleADS;
         public final ForgeConfigSpec.DoubleValue globalDamageMultiplier;
+        public final ForgeConfigSpec.DoubleValue armorDamageScaling;
         public final ForgeConfigSpec.BooleanValue disableVillagerSpawning;
         public final ForgeConfigSpec.DoubleValue dissidentSpawnChance;
         public final ForgeConfigSpec.BooleanValue enableAutoReload;
@@ -290,6 +291,11 @@ public class Config
                 this.globalDamageMultiplier = builder
                         .comment("Global multiplier for all gun damage. 1.0 = normal damage, 0.5 = half damage, 2.0 = double damage. Affects all projectile damage from guns.")
                         .defineInRange("globalDamageMultiplier", 1.0, 0.01, 10.0);
+                this.armorDamageScaling = builder
+                        .comment("Extra armor scaling for bullet damage. Bullet damage is divided by (1 + value * effective armor), where effective armor is the target's armor after the bullet's armor bypass.",
+                                "0.0 = disabled (default). Combine with globalDamageMultiplier so bullets hit harder against lightly armored targets and softer against heavily armored ones.",
+                                "Example: globalDamageMultiplier 1.6 with armorDamageScaling 0.03 keeps damage unchanged at 20 armor, +60% at 0 armor, -27% at 40 armor.")
+                        .defineInRange("armorDamageScaling", 0.0, 0.0, 1.0);
                 this.disableVillagerSpawning = builder
                         .comment("If true, the Brass Mask ritual will never spawn villagers. When disabled, it will spawn Dissidents instead based on the spawn chance below.")
                         .define("disableVillagerSpawning", false);
