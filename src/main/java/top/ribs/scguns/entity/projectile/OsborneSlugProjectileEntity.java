@@ -210,9 +210,6 @@ public class OsborneSlugProjectileEntity extends ProjectileEntity {
             damage = applyProjectileProtection(livingTarget, damage);
             damage = calculateArmorBypassDamage(livingTarget, damage);
         }
-        if (entity instanceof LivingEntity livingTarget) {
-            damage = calculateArmorBypassDamage(livingTarget, damage);
-        }
 
         DamageSource source = ModDamageTypes.Sources.projectile(this.level().registryAccess(), this, (LivingEntity) this.getOwner());
         boolean blocked = ProjectileHelper.handleShieldHit(entity, this, damage, SHIELD_DISABLE_CHANCE);

@@ -82,10 +82,6 @@ public class GibbsRoundProjectileEntity extends ProjectileEntity {
             damage *= Config.COMMON.gameplay.headShotDamageMultiplier.get();
         }
         if (entity instanceof LivingEntity livingTarget) {
-            damage = applyProjectileProtection(livingTarget, damage);
-            damage = calculateArmorBypassDamage(livingTarget, damage);
-        }
-        if (entity instanceof LivingEntity livingTarget) {
             damage = GunEnchantmentHelper.getPuncturingDamageReduction(this.getWeapon(), livingTarget, damage);
             damage = applyProjectileProtection(livingTarget, damage);
             damage = calculateArmorBypassDamage(livingTarget, damage);

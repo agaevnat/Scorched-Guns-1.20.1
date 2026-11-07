@@ -79,10 +79,6 @@ public class AdvancedRoundProjectileEntity extends ProjectileEntity {
                                 if (headshot) {
                                     duration = (int)(duration * HEADSHOT_EFFECT_DURATION_MULTIPLIER);
                                 }
-                                if (entity instanceof LivingEntity livingTarget) {
-                                    damage = applyProjectileProtection(livingTarget, damage);
-                                    damage = calculateArmorBypassDamage(livingTarget, damage);
-                                }
                                 livingEntity.addEffect(new MobEffectInstance(
                                         effect,
                                         duration,
