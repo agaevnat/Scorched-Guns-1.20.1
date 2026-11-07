@@ -162,6 +162,10 @@ public class ClientPlayHandler {
         }
 
         if(message.getShooterId() == mc.player.getId()) {
+            // Play the shooter's own sound at their eye position instead of as a relative sound at 0,0,0.
+            // It sounds the same without sound mods (no attenuation, source at the listener), but
+            // sound physics mods such as Sound Physics Remastered skip sounds positioned at 0,0,0,
+            // so a relative sound never got reverb or occlusion.
             Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(
                     message.getId(),
                     SoundSource.PLAYERS,
@@ -171,8 +175,8 @@ public class ClientPlayHandler {
                     false,
                     0,
                     SoundInstance.Attenuation.NONE,
-                    0, 0, 0,
-                    true));
+                    mc.player.getX(), mc.player.getEyeY(), mc.player.getZ(),
+                    false));
         } else {
             Minecraft.getInstance().getSoundManager().play(new GunShotSound(
                     message.getId(),
