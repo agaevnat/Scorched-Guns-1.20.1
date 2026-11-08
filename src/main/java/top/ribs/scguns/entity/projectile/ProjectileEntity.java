@@ -100,6 +100,8 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
     protected EntityDimensions entitySize;
     protected double modifiedGravity;
     protected int life;
+    /** Factor the bullet speed was raised by through the ballistics config; lifetime was divided by it. */
+    protected double lifeScale = 1.0;
     private int soundTime = 0;
     private float chargeProgress;
     protected float armorBypassAmount = 2.0F;
@@ -136,8 +138,20 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         this.attributeDamageMultiplier = damageMultAttr != null ? damageMultAttr.getValue() : 1.0;
 
         this.entitySize = new EntityDimensions(this.projectile.getSize(), this.projectile.getSize(), false);
-        this.modifiedGravity = modifiedGun.getProjectile().isGravity() ? GunModifierHelper.getModifiedProjectileGravity(weapon, -0.04) : 0.0;
+        boolean bullet = isAffectedByBallistics(this.projectile);
+        double bulletGravity = bullet ? Config.COMMON.ballistics.bulletGravity.get() : 0.0;
+        if (this.projectile.isGravity()) {
+            this.modifiedGravity = GunModifierHelper.getModifiedProjectileGravity(weapon, -0.04);
+        } else if (bulletGravity > 0.0) {
+            this.modifiedGravity = GunModifierHelper.getModifiedProjectileGravity(weapon, -bulletGravity);
+        } else {
+            this.modifiedGravity = 0.0;
+        }
+        this.lifeScale = bullet ? Config.COMMON.ballistics.bulletSpeedMultiplier.get() : 1.0;
         this.life = GunModifierHelper.getModifiedProjectileLife(weapon, this.projectile.getLife());
+        if (this.lifeScale != 1.0) {
+            this.life = Math.max(1, (int) Math.round(this.life / this.lifeScale));
+        }
         this.worldDay = worldIn.getDayTime() / 24000L;
 
         /* Get speed and set motion */
@@ -151,6 +165,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
 
         AttributeInstance speedAttr = shooter.getAttribute(SCAttributes.PROJECTILE_SPEED.get());
         speed *= speedAttr != null ? speedAttr.getValue() : 1.0;
+        speed *= this.lifeScale;
         this.setDeltaMovement(dir.x * speed, dir.y * speed, dir.z * speed);
         this.updateHeading();
 
@@ -311,7 +326,9 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         float initialDamage = (this.projectile.getDamage() + this.additionalDamage + this.attributeAdditionalDamage);
         initialDamage *= (float) this.attributeDamageMultiplier;
         if (this.projectile.isDamageReduceOverLife()) {
-            float modifier = ((float) this.projectile.getLife() - (float) (this.tickCount - 1)) / (float) this.projectile.getLife();
+            // Scale elapsed ticks back to the original lifetime so faster bullets lose damage over the same distance
+            float elapsed = (float) ((this.tickCount - 1) * this.lifeScale);
+            float modifier = ((float) this.projectile.getLife() - elapsed) / (float) this.projectile.getLife();
             initialDamage *= modifier;
         }
         return initialDamage / this.general.getProjectileAmount();
@@ -339,6 +356,30 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
 
     public double getModifiedGravity() {
         return this.modifiedGravity;
+    }
+
+    /**
+     * Whether gravity pulls this projectile down each tick. True for guns with gravity in their data
+     * and for bullets when the ballistics config adds gravity.
+     */
+    protected boolean hasGravity() {
+        return this.modifiedGravity != 0.0;
+    }
+
+    public int getMaxLife() {
+        return this.life;
+    }
+
+    /**
+     * Regular bullets: no gravity in the gun data and ammo not listed in the ballistics exclusions.
+     */
+    private static boolean isAffectedByBallistics(Projectile projectile) {
+        if (projectile.isGravity()) {
+            return false;
+        }
+        Item ammo = projectile.getItem();
+        ResourceLocation id = ammo != null ? ForgeRegistries.ITEMS.getKey(ammo) : null;
+        return id == null || !Config.COMMON.ballistics.excludedAmmo.get().contains(id.toString());
     }
 
     public void tick() {
@@ -411,7 +452,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         double nextPosZ = this.getZ() + this.getDeltaMovement().z();
         this.setPos(nextPosX, nextPosY, nextPosZ);
 
-        if (this.projectile.isGravity()) {
+        if (this.hasGravity()) {
             this.setDeltaMovement(this.getDeltaMovement().add(0, this.modifiedGravity, 0));
         }
 
@@ -878,6 +919,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         this.general.deserializeNBT(compound.getCompound("General"));
         this.modifiedGravity = compound.getDouble("ModifiedGravity");
         this.life = compound.getInt("MaxLife");
+        this.lifeScale = compound.contains("LifeScale") ? compound.getDouble("LifeScale") : 1.0;
     }
 
     @Override
@@ -886,6 +928,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         compound.put("General", this.general.serializeNBT());
         compound.putDouble("ModifiedGravity", this.modifiedGravity);
         compound.putInt("MaxLife", this.life);
+        compound.putDouble("LifeScale", this.lifeScale);
     }
 
     @Override
