@@ -207,6 +207,7 @@ public class Config
         public final Grenades grenades;
         public final StunGrenades stunGrenades;
         public final ProjectileSpread projectileSpread;
+        public final Ballistics ballistics;
         public final Gunsmith Gunsmith;
         public final Turret turret;
 
@@ -223,8 +224,43 @@ public class Config
                 this.grenades = new Grenades(builder);
                 this.stunGrenades = new StunGrenades(builder);
                 this.projectileSpread = new ProjectileSpread(builder);
+                this.ballistics = new Ballistics(builder);
                 this.Gunsmith = new Gunsmith(builder);
                 this.turret = new Turret(builder);
+            }
+            builder.pop();
+        }
+    }
+
+    /**
+     * Bullet flight config options
+     */
+    public static class Ballistics
+    {
+        public final ForgeConfigSpec.DoubleValue bulletGravity;
+        public final ForgeConfigSpec.DoubleValue bulletSpeedMultiplier;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> excludedAmmo;
+
+        public Ballistics(ForgeConfigSpec.Builder builder)
+        {
+            builder.comment("Properties relating to bullet flight. These only affect projectiles whose gun data has gravity turned off,",
+                    "so rockets, grenades and other arcing projectiles keep their own behaviour.").push("ballistics");
+            {
+                this.bulletGravity = builder.comment(
+                                "Downward acceleration of bullets, in blocks per tick squared.",
+                                "0.0 = bullets fly in a straight line (default). About 0.025 matches real gravity; vanilla arrows use 0.05.")
+                        .defineInRange("bulletGravity", 0.0, 0.0, 0.2);
+                this.bulletSpeedMultiplier = builder.comment(
+                                "Multiplier for the flight speed of bullets. Their lifetime is divided by the same value, so the maximum range stays the same.",
+                                "1.0 = unchanged (default). Raise it together with bulletGravity so that drop stays small at normal combat ranges.")
+                        .defineInRange("bulletSpeedMultiplier", 1.0, 0.25, 4.0);
+                this.excludedAmmo = builder.comment(
+                                "Ammo item ids that are not regular bullets and keep straight flight and their original speed:",
+                                "energy, shock and sculk shots, shulker shots, flamethrower fuel, self-propelled microjets and syringes.")
+                        .defineList("excludedAmmo", Arrays.asList(
+                                "scguns:energy_cell", "scguns:energy_core", "scguns:shock_cell", "scguns:sculk_cell",
+                                "scguns:shulkshot", "scguns:blaze_fuel", "scguns:microjet", "scguns:syringe",
+                                "minecraft:blaze_rod", "minecraft:arrow"), o -> o instanceof String);
             }
             builder.pop();
         }

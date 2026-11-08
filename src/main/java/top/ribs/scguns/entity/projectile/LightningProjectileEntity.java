@@ -386,7 +386,7 @@ public class LightningProjectileEntity extends ProjectileEntity {
         double nextPosZ = this.getZ() + this.getDeltaMovement().z();
         this.setPos(nextPosX, nextPosY, nextPosZ);
 
-        if (this.projectile.isGravity()) {
+        if (this.hasGravity()) {
             this.setDeltaMovement(this.getDeltaMovement().add(0, this.modifiedGravity, 0));
         }
 

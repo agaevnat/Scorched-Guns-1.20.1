@@ -131,7 +131,7 @@ public class KrahgRoundProjectileEntity extends ProjectileEntity {
                 this.getY() + this.getDeltaMovement().y,
                 this.getZ() + this.getDeltaMovement().z);
 
-        if (this.projectile.isGravity()) {
+        if (this.hasGravity()) {
             this.setDeltaMovement(this.getDeltaMovement().add(0, this.modifiedGravity, 0));
         }
 
